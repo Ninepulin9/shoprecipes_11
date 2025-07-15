@@ -105,6 +105,28 @@ $config = Config::first();
 </head>
 
 <body>
+    <div style="text-align: end;" id="google_translate_element"></div>
+    
+
+<script type="text/javascript">
+
+    
+
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({
+    pageLanguage: 'th', // ภาษาเริ่มต้นของเว็บไซต์
+    includedLanguages: 'en,th', // จำกัดภาษาให้เลือกได้ (ไม่ใส่ = ทุกภาษา)
+    layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+  }, 'google_translate_element');
+}
+</script>
+
+
+
+
+
+<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit&hl=en"></script>
+
 
     <main>
         @yield('content')
