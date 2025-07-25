@@ -37,6 +37,7 @@
                     </div>
                 </div>
             </div>
+            <?php if($can_view_amount): ?>
             <div class="col-lg-12 col-md-12 order-2">
                 <div class="card">
                     <div class="card-header">
@@ -60,6 +61,7 @@
                     </div>
                 </div>
             </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>
@@ -268,6 +270,7 @@
                 },
             ]
         });
+        <?php if($can_view_amount): ?>
         $("#myTable2").DataTable({
             language: {
                 url: language,
@@ -313,6 +316,7 @@
                 },
             ]
         });
+        <?php endif; ?>
     });
 </script>
 <script>

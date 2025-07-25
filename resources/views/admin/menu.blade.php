@@ -186,7 +186,7 @@ $user = RoleHelper::getCurrentUser();
         @endif
 
         {{-- ส่วนรายจ่าย - เฉพาะ Owner --}}
-        @if(RoleHelper::isOwner())
+        @if(RoleHelper::canManageSystem())
             <li class="menu-header small text-uppercase"><span class="menu-header-text">รายจ่าย</span></li>
             <li class="menu-item {{ ($function_key == 'category_expenses') ? 'active' : '' }}">
                 <a href="{{route('category_expenses')}}" class="menu-link">
