@@ -25,14 +25,15 @@ class AuthController extends Controller
         $user = User::where('email', $request->email)->with('categories')->first();
 
         if ($user && Hash::check($request->password, $user->password)) {
-            Session::put('user', $user); // เก็บ user ไว้ใน session\
+            Session::put('user', $user);
 
-            if ($user->role === 'admin') {
+            if (in_array($user->role, ['owner', 'manager', 'cashier', 'staff'])) {
                 return redirect('/admin');
             } else {
                 return redirect('/delivery');
             }
         }
+
 
         return back()->withErrors(['email' => 'อีเมลหรือรหัสผ่านไม่ถูกต้อง']);
     }
