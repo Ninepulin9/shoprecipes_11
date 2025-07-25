@@ -24,7 +24,7 @@ class RoleHelper
             $userRole = 'owner';
         }
         
-        return in_array($userRole, ['owner', 'cashier']);
+        return in_array($userRole, ['owner', 'cashier', 'manager']);
     }
     
     /**
@@ -153,7 +153,7 @@ class RoleHelper
             $userRole = 'owner';
         }
         
-        return in_array($userRole, ['owner', 'cashier']);
+        return in_array($userRole, ['owner', 'cashier', 'manager']);
     }
     
     
@@ -368,4 +368,11 @@ class RoleHelper
         
         return in_array($routeName, $accessibleRoutes);
     }
+
+    public static function canViewExpenses()
+{
+    $role = self::getCurrentRole();
+    return in_array($role, ['owner', 'manager']);
+}
+
 }

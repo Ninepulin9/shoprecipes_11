@@ -125,18 +125,18 @@ class MenuHelper
                 'roles' => ['cashier']
             ],
             
-            // ส่วนรายจ่าย - เฉพาะ Owner
+            // ส่วนรายจ่าย - เฉพาะ Owner,manager
             [
                 'title' => 'หมวดหมู่รายจ่าย',
                 'icon' => 'fas fa-list',
                 'route' => 'category_expenses',
-                'roles' => ['owner']
+                'roles' => ['owner','manager']
             ],
             [
                 'title' => 'รายจ่าย',
                 'icon' => 'fas fa-money-bill-wave',
                 'route' => 'expenses',
-                'roles' => ['owner']
+                'roles' => ['owner', 'manager']
             ],
             
             // ส่วนผู้ใช้ - เฉพาะ Owner
