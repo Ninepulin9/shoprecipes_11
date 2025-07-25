@@ -47,17 +47,16 @@ class Delivery extends Controller
         $menu = Menu::where('categories_id', $id)
             ->where(function ($query) use ($today) {
         $query->where(function ($q) use ($today) {
-            $q->whereNull('start_date')
-                ->orWhere('start_date', '<=', $today);
-        })->where(function ($q) use ($today) {
-            $q->whereNull('end_date')
-                ->orWhere('end_date', '>=', $today);
-        });
-    })
-         ->with('files')
-         ->orderBy('created_at', 'asc')
-         ->get();
-        $menu = Menu::where('categories_id', $id)->with('files')->orderBy('created_at', 'asc')->get();
+                    $q->whereNull('start_date')
+                        ->orWhere('start_date', '<=', $today);
+                })->where(function ($q) use ($today) {
+                    $q->whereNull('end_date')
+                        ->orWhere('end_date', '>=', $today);
+                });
+            })
+            ->with('files')
+            ->orderBy('created_at', 'asc')
+            ->get();
         foreach ($menu as $key => $rs) {
             $item[$key] = [
                 'id' => $rs->id,
