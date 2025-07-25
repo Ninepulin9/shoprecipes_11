@@ -23,7 +23,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use PromptPayQR\Builder;
 use App\Helpers\RoleHelper;
-
+use Illuminate\Support\Facades\Hash;
+use function Laravel\Prompts\table;
 class Admin extends Controller
 {
     public function dashboard(Request $request)
@@ -416,8 +417,62 @@ class Admin extends Controller
         }
 
         $data['function_key'] = 'admin.users';
-        $data['users'] = User::where('role', '!=', 'user')->get();
+        
         return view('admin.users.index', $data);
+    }
+     public function userslistData()
+    {
+        $data = [
+            'status' => false,
+            'message' => '',
+            'data' => []
+        ];
+
+        $users = User::whereIn('role', ['owner', 'manager', 'cashier', 'staff', 'admin'])->get();
+
+        if (count($users) > 0) {
+            $info = [];
+            foreach ($users as $rs) {
+                $action = '<a href="' . route('admin.usersEdit', $rs->id) . '" class="btn btn-sm btn-outline-primary" title="แก้ไข"><i class="bx bx-edit-alt"></i></a>
+                <button type="button" data-id="' . $rs->id . '" class="btn btn-sm btn-outline-danger deleteUser" title="ลบ"><i class="bx bxs-trash"></i></button>';
+                $info[] = [
+                    'name' => $rs->name,
+                    'email' => $rs->email,
+                    'tel' => $rs->tel,
+                    'role' => $rs->role,
+                    'action' => $action
+                ];
+            }
+            $data = [
+                'data' => $info,
+                'status' => true,
+                'message' => 'success'
+            ];
+        }
+
+        return response()->json($data);
+    }
+
+    public function usersCreate()
+    {
+        if (!RoleHelper::isOwner()) {
+            abort(403, 'เฉพาะเจ้าของเท่านั้น');
+        }
+
+        $data['function_key'] = 'admin.users';
+        return view('admin.users.create', $data);
+    }
+
+    public function usersEdit($id)
+    {
+        if (!RoleHelper::isOwner()) {
+            abort(403, 'เฉพาะเจ้าของเท่านั้น');
+        }
+
+        $function_key = 'admin.users';
+        $info = User::find($id);
+
+        return view('admin.users.edit', compact('info', 'function_key'));
     }
 
     public function usersSave(Request $request)
@@ -425,12 +480,68 @@ class Admin extends Controller
         if (!RoleHelper::isOwner()) {
             abort(403, 'เฉพาะเจ้าของเท่านั้น');
         }
+        $input = $request->input();
 
-        // บันทึกข้อมูลผู้ใช้
-        // ... code สำหรับบันทึก
+        if (!isset($input['id'])) {
+            $user = new User();
+            $user->name = $input['name'];
+            $user->email = $input['email'];
+            $user->tel = $input['tel'];
+            $user->role = $input['role'];
+            $user->email_verified_at = now();
+            $user->password = Hash::make($input['password']);
+            $user->remember_token = null;
+            if ($user->save()) {
+                return redirect()->route('admin.users')->with('success', 'บันทึกรายการเรียบร้อยแล้ว');
+            }
+        } else {
+            $user = User::find($input['id']);
+            $user->name = $input['name'];
+            $user->email = $input['email'];
+            $user->tel = $input['tel'];
+            $user->role = $input['role'];
+            if (!empty($input['password'])) {
+                $user->password = Hash::make($input['password']);
+            }
+            if ($user->save()) {
+                return redirect()->route('admin.users')->with('success', 'บันทึกรายการเรียบร้อยแล้ว');
+            }
+        }
+
+        return redirect()->route('admin.users')->with('error', 'ไม่สามารถบันทึกข้อมูลได้');
     }
 
-    // ฟังก์ชันเดิมที่เหลือ...
+    public function usersDelete(Request $request)
+    {
+        if (!RoleHelper::isOwner()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'ไม่มีสิทธิ์',
+            ]);
+        }
+
+        $data = [
+            'status' => false,
+            'message' => 'ลบข้อมูลไม่สำเร็จ',
+        ];
+        $id = $request->input('id');
+        if ($id) {
+            $delete = User::find($id);
+            if ($delete->delete()) {
+                $data = [
+                    'status' => true,
+                    'message' => 'ลบข้อมูลเรียบร้อยแล้ว',
+                ];
+            }
+        }
+
+        return response()->json($data);
+        
+
+        
+    }
+
+    
     function DateThai($strDate)
     {
         $strYear = date("Y", strtotime($strDate)) + 543;

@@ -11,6 +11,8 @@ use App\Models\MenuOption;
 use App\Models\MenuOptionRecipes;
 use App\Models\MenuTypeOption;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
+
 
 class Menu extends Controller
 {
@@ -68,6 +70,8 @@ class Menu extends Controller
             $menu->name = $input['name'];
             $menu->categories_id = $input['categories_id'];
             $menu->base_price = $input['base_price'];
+            $menu->start_date = $input['start_date'] ?? null;
+            $menu->end_date = $input['end_date'] ?? null;
             $menu->detail = $input['detail'];
             $menu->categories_member_id = $input['categories_member_id'] ?? null;
             if ($menu->save()) {
@@ -88,6 +92,8 @@ class Menu extends Controller
             $menu->name = $input['name'];
             $menu->categories_id = $input['categories_id'];
             $menu->base_price = $input['base_price'];
+            $menu->start_date = $input['start_date'] ?? null;
+            $menu->end_date = $input['end_date'] ?? null;
             $menu->detail = $input['detail'];
             $menu->categories_member_id = $input['categories_member_id'] ?? null;
             if ($menu->save()) {

@@ -95,6 +95,7 @@ Route::middleware(['role:owner'])->group(function () {
     
     // จัดการผู้ใช้และสิทธิ์ 
     Route::get('/admin/users', [Admin::class, 'users'])->name('admin.users');
+    Route::post('/admin/users/listData', [Admin::class, 'userslistData'])->name('admin.userslistData');
     Route::post('/admin/users/save', [Admin::class, 'usersSave'])->name('admin.usersSave');
     Route::get('/admin/users/create', [Admin::class, 'usersCreate'])->name('admin.usersCreate');
     Route::get('/admin/users/edit/{id}', [Admin::class, 'usersEdit'])->name('admin.usersEdit');

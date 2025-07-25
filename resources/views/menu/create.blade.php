@@ -61,6 +61,16 @@
                                                 @endforeach
                                             </select>
                                         </div>
+                                        </div>
+                                        <div class="row g-3 mb-3">
+                                        <div class="col-md-6">
+                                            <label for="start_date" class="form-label">เวลาเริ่มต้น : </label>
+                                            <input type="date" class="form-control" id="start_date" name="start_date" value="{{ old('start_date', isset($info) ? $info->start_date : '') }}">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="end_date" class="form-label">เวลาสิ้นสุด : </label>
+                                            <input type="date" class="form-control" id="end_date" name="end_date" value="{{ old('end_date', isset($info) ? $info->end_date : '') }}">
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="card-footer d-flex justify-content-end">
