@@ -476,62 +476,60 @@ class Admin extends Controller
     }
 
     public function usersSave(Request $request)
-    {
-        if (!RoleHelper::isOwner()) {
-            abort(403, 'เฉพาะเจ้าของเท่านั้น');
-        }
-        $input = $request->input();
-
-        if (!isset($input['id'])) {
-            // check duplicate email
-            if (User::where('email', $input['email'])->exists()) {
-                return redirect()->back()->with('error', 'อีเมลซ้ำ กรุณาใส่ใหม่');
-            }
-            // check duplicate name
-            if (User::where('name', $input['name'])->exists()) {
-                return redirect()->back()->with('error', 'ชื่อผู้ใช้ซ้ำ กรุณาใส่ใหม่');
-            }
-            // check duplicate tel
-            if (User::where('tel', $input['tel'])->exists()) {
-                return redirect()->back()->with('error', 'เบอร์ติดต่อซ้ำ กรุณาใส่ใหม่');
-            }
-            $user = new User();
-            $user->name = $input['name'];
-            $user->email = $input['email'];
-            $user->tel = $input['tel'];
-            $user->role = $input['role'];
-            $user->email_verified_at = now();
-            $user->password = Hash::make($input['password']);
-            $user->remember_token = null;
-            if ($user->save()) {
-                return redirect()->route('admin.users')->with('success', 'บันทึกรายการเรียบร้อยแล้ว');
-            }
-        } else {
-            $user = User::find($input['id']);
-             // check duplicates for update except current record
-            if (User::where('email', $input['email'])->where('id', '!=', $input['id'])->exists()) {
-                return redirect()->back()->with('error', 'อีเมลซ้ำ กรุณาใส่ใหม่');
-            }
-            if (User::where('name', $input['name'])->where('id', '!=', $input['id'])->exists()) {
-                return redirect()->back()->with('error', 'ชื่อผู้ใช้ซ้ำ กรุณาใส่ใหม่');
-            }
-            if (User::where('tel', $input['tel'])->where('id', '!=', $input['id'])->exists()) {
-                return redirect()->back()->with('error', 'เบอร์ติดต่อซ้ำ กรุณาใส่ใหม่');
-            }
-            $user->name = $input['name'];
-            $user->email = $input['email'];
-            $user->tel = $input['tel'];
-            $user->role = $input['role'];
-            if (!empty($input['password'])) {
-                $user->password = Hash::make($input['password']);
-            }
-            if ($user->save()) {
-                return redirect()->route('admin.users')->with('success', 'บันทึกรายการเรียบร้อยแล้ว');
-            }
-        }
-
-        return redirect()->route('admin.users')->with('error', 'ไม่สามารถบันทึกข้อมูลได้');
+{
+    if (!RoleHelper::isOwner()) {
+        abort(403, 'เฉพาะเจ้าของเท่านั้น');
     }
+
+    // รับค่า id ถ้ามี
+    $id = $request->get('id');
+
+    // กำหนด rule สำหรับ validate
+    $rules = [
+        'name' => 'required|string|max:255',
+        'email' => 'required|email|unique:users,email' . ($id ? ',' . $id : ''),
+        'tel' => 'required|string|max:20',
+        'role' => 'required|in:owner,manager,cashier,staff,admin', // แก้ไขให้ตรงกับ role ที่มี
+        'password' => $id ? 'nullable|min:6' : 'required|min:6',
+    ];
+
+    // ตรวจสอบความถูกต้องของข้อมูล
+    $request->validate($rules);
+
+    // เตรียมข้อมูล
+    $data = [
+        'name' => $request->name,
+        'email' => $request->email,
+        'tel' => $request->tel,
+        'role' => $request->role,
+    ];
+
+    // ถ้ามีการกรอกรหัสผ่านใหม่
+    if ($request->filled('password')) {
+        $data['password'] = Hash::make($request->password);
+    }
+
+    try {
+        if (empty($id)) {
+            // เพิ่มผู้ใช้ใหม่
+            $data['email_verified_at'] = now();
+            $user = User::create($data);
+            $message = 'เพิ่มผู้ใช้เรียบร้อยแล้ว';
+        } else {
+            // แก้ไขผู้ใช้เดิม
+            $user = User::findOrFail($id);
+            $user->update($data);
+            $message = 'แก้ไขผู้ใช้เรียบร้อยแล้ว';
+        }
+
+        return redirect()->route('admin.users')->with('success', $message);
+
+    } catch (\Exception $e) {
+        return redirect()->back()
+            ->withInput()
+            ->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+    }
+}
 
     public function usersDelete(Request $request)
     {
