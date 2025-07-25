@@ -22,6 +22,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use PromptPayQR\Builder;
+use Illuminate\Validation\ValidationException;
 use App\Helpers\RoleHelper;
 use Illuminate\Support\Facades\Hash;
 use function Laravel\Prompts\table;
@@ -477,59 +478,62 @@ class Admin extends Controller
 
     public function usersSave(Request $request)
 {
-    if (!RoleHelper::isOwner()) {
-        abort(403, 'เฉพาะเจ้าของเท่านั้น');
-    }
-
-    // รับค่า id ถ้ามี
-    $id = $request->get('id');
-
-    // กำหนด rule สำหรับ validate
-    $rules = [
-        'name' => 'required|string|max:255',
-        'email' => 'required|email|unique:users,email' . ($id ? ',' . $id : ''),
-        'tel' => 'required|string|max:20',
-        'role' => 'required|in:owner,manager,cashier,staff,admin', // แก้ไขให้ตรงกับ role ที่มี
-        'password' => $id ? 'nullable|min:6' : 'required|min:6',
-    ];
-
-    // ตรวจสอบความถูกต้องของข้อมูล
-    $request->validate($rules);
-
-    // เตรียมข้อมูล
-    $data = [
-        'name' => $request->name,
-        'email' => $request->email,
-        'tel' => $request->tel,
-        'role' => $request->role,
-    ];
-
-    // ถ้ามีการกรอกรหัสผ่านใหม่
-    if ($request->filled('password')) {
-        $data['password'] = Hash::make($request->password);
-    }
-
-    try {
-        if (empty($id)) {
-            // เพิ่มผู้ใช้ใหม่
-            $data['email_verified_at'] = now();
-            $user = User::create($data);
-            $message = 'เพิ่มผู้ใช้เรียบร้อยแล้ว';
-        } else {
-            // แก้ไขผู้ใช้เดิม
-            $user = User::findOrFail($id);
-            $user->update($data);
-            $message = 'แก้ไขผู้ใช้เรียบร้อยแล้ว';
+        if (!RoleHelper::isOwner()) {
+            abort(403, 'เฉพาะเจ้าของเท่านั้น');
         }
 
-        return redirect()->route('admin.users')->with('success', $message);
+        $id = $request->get('id');
 
-    } catch (\Exception $e) {
-        return redirect()->back()
-            ->withInput()
-            ->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+        // กำหนด rule สำหรับ validate
+        $rules = [
+            'name' => 'required|string|max:255|unique:users,name' . ($id ? ',' . $id : ''),
+            'email' => 'required|email|unique:users,email' . ($id ? ',' . $id : ''),
+            'tel' => 'required|string|max:20|unique:users,tel' . ($id ? ',' . $id : ''),
+            'role' => 'required|in:manager,cashier,staff',
+            'password' => $id ? 'nullable|min:8' : 'required|min:8',
+        ];
+
+        // ข้อความแจ้งเตือนสำหรับ validation
+        $messages = [
+            'name.unique' => 'ชื่อผู้ใช้นี้มีอยู่ในระบบแล้ว',
+            'email.unique' => 'อีเมลนี้มีอยู่ในระบบแล้ว',
+            'tel.unique' => 'เบอร์ติดต่อนี้มีอยู่ในระบบแล้ว',
+            'required' => 'กรุณากรอกข้อมูล :attribute',
+            'password.min' => 'รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร',
+        ];
+
+        try {
+            $request->validate($rules, $messages);
+        } catch (ValidationException $e) {
+            // หาก validation ไม่ผ่าน ให้ส่งข้อความแรกที่ผิดพลาดกลับไป
+            return redirect()->back()->withInput($request->except('password'))->with('error', $e->validator->errors()->first());
+        }
+
+        $data = [
+            'name' => $request->name,
+            'email' => $request->email,
+            'tel' => $request->tel,
+            'role' => $request->role,
+        ];
+
+        if ($request->filled('password')) {
+            $data['password'] = Hash::make($request->password);
+        }
+
+        try {
+            if (empty($id)) {
+                $data['email_verified_at'] = now();
+                User::create($data);
+                $message = 'เพิ่มผู้ใช้เรียบร้อยแล้ว';
+            } else {
+                User::findOrFail($id)->update($data);
+                $message = 'แก้ไขผู้ใช้เรียบร้อยแล้ว';
+            }
+            return redirect()->route('admin.users')->with('success', $message);
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput($request->except('password'))->with('error', 'เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' . $e->getMessage());
+        }
     }
-}
 
     public function usersDelete(Request $request)
     {
