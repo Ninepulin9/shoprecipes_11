@@ -140,22 +140,32 @@ $user = RoleHelper::getCurrentUser();
                 </a>
             </li>
         @endif
-        {{-- ส่วนการเงิน  Manager --}}
-        @if(RoleHelper::canManageFinance())
-            <li class="menu-header small text-uppercase"><span class="menu-header-text">รายจ่าย</span></li>
-            <li class="menu-item {{ ($function_key == 'category_expenses') ? 'active' : '' }}">
-                <a href="{{route('category_expenses')}}" class="menu-link">
-                    <i class="menu-icon tf-icons bx bx-collection"></i>
-                    <div data-i18n="Basic">หมวดหมู่รายจ่าย</div>
-                </a>
-            </li>
-            <li class="menu-item {{ ($function_key == 'expenses') ? 'active' : '' }}">
-                <a href="{{route('expenses')}}" class="menu-link">
-                    <i class="menu-icon tf-icons bx bxs-dollar-circle"></i>
-                    <div data-i18n="Basic">รายจ่ายทั้งหมด</div>
-                </a>
-            </li>
-        @endif
+
+{{-- ส่วนการเงิน - Owner และ Manager --}}
+@if(RoleHelper::canManagerViewFinance())
+
+    
+    <li class="menu-header small text-uppercase"><span class="menu-header-text">รายจ่าย</span></li>
+    
+    {{-- หมวดหมู่รายจ่าย --}}
+    <li class="menu-item {{ ($function_key == 'category_expenses') ? 'active' : '' }}">
+        <a href="{{route('category_expenses')}}" class="menu-link">
+            <i class="menu-icon tf-icons bx bx-collection"></i>
+            <div data-i18n="Basic">หมวดหมู่รายจ่าย</div>
+        </a>
+    </li>
+    
+    {{-- รายจ่ายทั้งหมด --}}
+    <li class="menu-item {{ ($function_key == 'expenses') ? 'active' : '' }}">
+        <a href="{{route('expenses')}}" class="menu-link">
+            <i class="menu-icon tf-icons bx bxs-dollar-circle"></i>
+            <div data-i18n="Basic">รายจ่ายทั้งหมด</div>
+        </a>
+    </li>
+@endif
+
+
+{{-- ลบส่วนรายจ่าย Owner ที่ซ้ำออก --}}
 
 
         {{-- ส่วนสมาชิก - เฉพาะ Owner และ Manager --}}

@@ -278,7 +278,10 @@ class RoleHelper
                 'manage_stock',
                 'manage_promotion',
                 'manage_member',
-                'view_order_list'
+                'view_order_list',
+                'view_financial_reports',
+                'view_daily_sales',
+                'manage_expenses'
             ],
             'cashier' => [
                 'handle_payment',
@@ -332,30 +335,31 @@ class RoleHelper
     
    
     public static function getAccessibleRoutes()
-    {
-        $userRole = self::getCurrentRole();
-        
-        $routes = [
-            'owner' => ['*'], 
-            'manager' => [
-                'dashboard', 'adminorder', 'category', 'menu', 'promotion', 
-                'table', 'rider', 'stock', 'member', 'memberCategory', 
-                'Memberorder', 'MemberorderRider'
-            ],
-            'cashier' => [
-                'dashboard', 'adminorder', 'Memberorder', 'MemberorderRider',
-                'myDailySales'
-            ],
-            'staff' => [
-                'dashboard', 'Memberorder', 'MemberorderRider'
-            ],
-            'user' => [
-                'delivery.users', 'delivery.order', 'delivery.listorder'
-            ]
-        ];
-        
-        return $routes[$userRole] ?? [];
-    }
+{
+    $userRole = self::getCurrentRole();
+    
+    $routes = [
+        'owner' => ['*'], 
+        'manager' => [
+            'dashboard', 'adminorder', 'category', 'menu', 'promotion', 
+            'table', 'rider', 'stock', 'member', 'memberCategory', 
+            'Memberorder', 'MemberorderRider', 'category_expenses', 
+            'expenses'  
+        ],
+        'cashier' => [
+            'dashboard', 'adminorder', 'Memberorder', 'MemberorderRider',
+            'myDailySales'
+        ],
+        'staff' => [
+            'dashboard', 'Memberorder', 'MemberorderRider'
+        ],
+        'user' => [
+            'delivery.users', 'delivery.order', 'delivery.listorder'
+        ]
+    ];
+    
+    return $routes[$userRole] ?? [];
+}
     
   
     public static function canAccessRoute($routeName)
@@ -369,10 +373,28 @@ class RoleHelper
         return in_array($routeName, $accessibleRoutes);
     }
 
-    public static function canViewExpenses()
+public static function canManagerViewFinance()
 {
-    $role = self::getCurrentRole();
-    return in_array($role, ['owner', 'manager']);
+    if (!Session::has('user')) {
+        return false;
+    }
+    
+    $user = Session::get('user');
+    $userRole = $user->role ?? null;
+    
+    if ($userRole === 'admin') {
+        $userRole = 'owner';
+    }
+    
+    return in_array($userRole, ['owner', 'manager']);
+}
+
+/**
+ * ตรวจสอบว่าสามารถดูรายงานการเงินได้หรือไม่ (รวม Manager)
+ */
+public static function canViewFinancialReports()
+{
+    return self::canManagerViewFinance();
 }
 
 }

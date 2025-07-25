@@ -82,30 +82,13 @@ Route::middleware('checkLogin')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// 1. Owner - เห็นได้ทุกอย่าง รวมรายงานการเงิน
+// 1. Owner - เห็นได้ทุกอย่าง
 Route::middleware(['role:owner,manager,cashier,staff'])->group(function () {
     Route::get('/admin', [Admin::class, 'dashboard'])->name('dashboard');
 });
 
-//  Owner ทำได้ทุกอย่าง
+//  Owner เฉพาะ - ตั้งค่าระบบและจัดการผู้ใช้
 Route::middleware(['role:owner'])->group(function () {
-    
-    // รายจ่าย 
-    Route::get('/admin/expenses', [Expenses::class, 'expenses'])->name('expenses');
-    Route::post('/admin/expenses/expenseslistData', [Expenses::class, 'expenseslistData'])->name('expenseslistData');
-    Route::get('/admin/expenses/create', [Expenses::class, 'ExpensesCreate'])->name('ExpensesCreate');
-    Route::get('/admin/expenses/edit/{id}', [Expenses::class, 'ExpensesEdit'])->name('ExpensesEdit');
-    Route::post('/admin/expenses/save', [Expenses::class, 'ExpensesSave'])->name('ExpensesSave');
-    Route::post('/admin/expenses/delete', [Expenses::class, 'ExpensesDelete'])->name('ExpensesDelete');
-    
-    // หมวดหมู่รายจ่าย (เฉพาะ Owner)
-    Route::get('/admin/category_expenses', [CategoryExpenses::class, 'category_expenses'])->name('category_expenses');
-    Route::post('/admin/category_expenses/categoryexpenseslistData', [CategoryExpenses::class, 'categoryexpenseslistData'])->name('categoryexpenseslistData');
-    Route::get('/admin/category_expenses/create', [CategoryExpenses::class, 'CategoryExpensesCreate'])->name('CategoryExpensesCreate');
-    Route::get('/admin/category_expenses/edit/{id}', [CategoryExpenses::class, 'CategoryExpensesEdit'])->name('CategoryExpensesEdit');
-    Route::post('/admin/category_expenses/delete', [CategoryExpenses::class, 'CategoryExpensesDelete'])->name('CategoryExpensesDelete');
-    Route::post('/admin/category_expenses/save', [CategoryExpenses::class, 'CategoryExpensesSave'])->name('CategoryExpensesSave');
-    
     // ตั้งค่าเว็บไซต์ 
     Route::get('/admin/config', [Admin::class, 'config'])->name('config');
     Route::post('/admin/config/save', [Admin::class, 'ConfigSave'])->name('ConfigSave');
@@ -118,10 +101,29 @@ Route::middleware(['role:owner'])->group(function () {
     Route::post('/admin/users/delete', [Admin::class, 'usersDelete'])->name('admin.usersDelete');
 });
 
-// 2. Owner + Manager 
+// 2. Owner + Manager - จัดการข้อมูลและรายจ่าย
 Route::middleware(['role:owner,manager'])->group(function () {
+    // รายจ่าย 
+    Route::get('/admin/expenses', [Expenses::class, 'expenses'])->name('expenses');
+    Route::post('/admin/expenses/expenseslistData', [Expenses::class, 'expenseslistData'])->name('expenseslistData');
+    Route::get('/admin/expenses/create', [Expenses::class, 'ExpensesCreate'])->name('ExpensesCreate');
+    Route::get('/admin/expenses/edit/{id}', [Expenses::class, 'ExpensesEdit'])->name('ExpensesEdit');
+    Route::post('/admin/expenses/save', [Expenses::class, 'ExpensesSave'])->name('ExpensesSave');
+    Route::post('/admin/expenses/delete', [Expenses::class, 'ExpensesDelete'])->name('ExpensesDelete');
+    
+    // หมวดหมู่รายจ่าย (ย้ายมาจาก owner เฉพาะ)
+    Route::get('/admin/category_expenses', [CategoryExpenses::class, 'category_expenses'])->name('category_expenses');
+    Route::post('/admin/category_expenses/categoryexpenseslistData', [CategoryExpenses::class, 'categoryexpenseslistData'])->name('categoryexpenseslistData');
+    Route::get('/admin/category_expenses/create', [CategoryExpenses::class, 'CategoryExpensesCreate'])->name('CategoryExpensesCreate');
+    Route::get('/admin/category_expenses/edit/{id}', [CategoryExpenses::class, 'CategoryExpensesEdit'])->name('CategoryExpensesEdit');
+    Route::post('/admin/category_expenses/delete', [CategoryExpenses::class, 'CategoryExpensesDelete'])->name('CategoryExpensesDelete');
+    Route::post('/admin/category_expenses/save', [CategoryExpenses::class, 'CategoryExpensesSave'])->name('CategoryExpensesSave');
+
+    // ยกเลิกออร์เดอร์
     Route::post('/admin/order/cancelOrder', [Admin::class, 'cancelOrder'])->name('cancelOrder');
     Route::post('/admin/order/cancelMenu', [Admin::class, 'cancelMenu'])->name('cancelMenu');
+    
+    // โปรโมชั่น
     Route::get('/admin/promotion', [Promotion::class, 'promotion'])->name('promotion');
     Route::post('/admin/promotion/listData', [Promotion::class, 'promotionlistData'])->name('promotionlistData');
     Route::get('/admin/promotion/create', [Promotion::class, 'promotionCreate'])->name('promotionCreate');
@@ -222,8 +224,8 @@ Route::middleware(['role:owner,manager'])->group(function () {
     Route::post('/admin/member/save', [Member::class, 'memberSave'])->name('memberSave');
 });
 
-// 3. Owner + Cashier 
-Route::middleware(['role:owner,cashier'])->group(function () {
+// 3. Owner + Manager + Cashier - การจัดการออร์เดอร์และชำระเงิน
+Route::middleware(['role:owner,manager,cashier'])->group(function () {
     Route::post('/admin/order/listData', [Admin::class, 'ListOrder'])->name('ListOrder');
     Route::post('/admin/order/ListOrderPay', [Admin::class, 'ListOrderPay'])->name('ListOrderPay');
     Route::post('/admin/order/ListOrderPayRider', [Admin::class, 'ListOrderPayRider'])->name('ListOrderPayRider');
@@ -237,15 +239,14 @@ Route::middleware(['role:owner,cashier'])->group(function () {
     // พิมพ์ใบเสร็จ
     Route::get('/admin/order/printReceipt/{id}', [Admin::class, 'printReceipt'])->name('printReceipt');
     Route::get('/admin/order/printReceiptfull/{id}', [Admin::class, 'printReceiptfull'])->name('printReceiptfull');
-    
 });
 
-// 4. Manager 
+// 4. Manager เฉพาะ
 Route::middleware(['role:manager'])->group(function () {
     Route::post('/admin/order/listDataForManager', [Admin::class, 'ListOrderForManager'])->name('ListOrderForManager');
 });
 
-// 5. - การทำงานทั่วไป
+// 5. ทุกคนที่ล็อกอินเข้าระบบ - การทำงานทั่วไป
 Route::middleware(['role:owner,manager,cashier,staff'])->group(function () {
     // ดูหน้าออร์เดอร์
     Route::get('/admin/order', [Admin::class, 'order'])->name('adminorder');

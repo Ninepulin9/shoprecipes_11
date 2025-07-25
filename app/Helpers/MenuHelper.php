@@ -110,19 +110,19 @@ class MenuHelper
                 'title' => 'รายงานการขาย',
                 'icon' => 'fas fa-chart-line',
                 'route' => 'salesReport',
-                'roles' => ['owner']
+                'roles' => ['owner'.'manager']
             ],
             [
                 'title' => 'รายงานการเงิน',
                 'icon' => 'fas fa-file-invoice-dollar',
                 'route' => 'financialReport',
-                'roles' => ['owner']
+                'roles' => ['owner','manager']
             ],
             [
                 'title' => 'ยอดขายประจำวัน',
                 'icon' => 'fas fa-cash-register',
                 'route' => 'myDailySales',
-                'roles' => ['cashier']
+                'roles' => ['cashier','manager']
             ],
             
             // ส่วนรายจ่าย - เฉพาะ Owner,manager
