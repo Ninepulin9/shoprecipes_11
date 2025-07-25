@@ -483,6 +483,18 @@ class Admin extends Controller
         $input = $request->input();
 
         if (!isset($input['id'])) {
+            // check duplicate email
+            if (User::where('email', $input['email'])->exists()) {
+                return redirect()->back()->with('error', 'อีเมลซ้ำ กรุณาใส่ใหม่');
+            }
+            // check duplicate name
+            if (User::where('name', $input['name'])->exists()) {
+                return redirect()->back()->with('error', 'ชื่อผู้ใช้ซ้ำ กรุณาใส่ใหม่');
+            }
+            // check duplicate tel
+            if (User::where('tel', $input['tel'])->exists()) {
+                return redirect()->back()->with('error', 'เบอร์ติดต่อซ้ำ กรุณาใส่ใหม่');
+            }
             $user = new User();
             $user->name = $input['name'];
             $user->email = $input['email'];
@@ -496,6 +508,16 @@ class Admin extends Controller
             }
         } else {
             $user = User::find($input['id']);
+             // check duplicates for update except current record
+            if (User::where('email', $input['email'])->where('id', '!=', $input['id'])->exists()) {
+                return redirect()->back()->with('error', 'อีเมลซ้ำ กรุณาใส่ใหม่');
+            }
+            if (User::where('name', $input['name'])->where('id', '!=', $input['id'])->exists()) {
+                return redirect()->back()->with('error', 'ชื่อผู้ใช้ซ้ำ กรุณาใส่ใหม่');
+            }
+            if (User::where('tel', $input['tel'])->where('id', '!=', $input['id'])->exists()) {
+                return redirect()->back()->with('error', 'เบอร์ติดต่อซ้ำ กรุณาใส่ใหม่');
+            }
             $user->name = $input['name'];
             $user->email = $input['email'];
             $user->tel = $input['tel'];
