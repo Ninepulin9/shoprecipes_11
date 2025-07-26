@@ -341,7 +341,7 @@ class RoleHelper
     $routes = [
         'owner' => ['*'], 
         'manager' => [
-            'dashboard', 'adminorder', 'category', 'menu', 'promotion', 
+            'adminorder', 'category', 'menu', 'promotion', 
             'table', 'rider', 'stock', 'member', 'memberCategory', 
             'Memberorder', 'MemberorderRider', 'category_expenses', 
             'expenses'  

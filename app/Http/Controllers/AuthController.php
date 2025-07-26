@@ -27,11 +27,17 @@ class AuthController extends Controller
         if ($user && Hash::check($request->password, $user->password)) {
             Session::put('user', $user);
 
-            if (in_array($user->role, ['owner', 'manager', 'cashier', 'staff'])) {
+            // Owner ยังคงเข้าหน้า Dashboard เดิม
+            if ($user->role === 'owner') {
                 return redirect('/admin');
-            } else {
-                return redirect('/delivery');
+            
             }
+            // Manager, Cashier, Staff และ User เข้าหน้ารายการออร์เดอร์หน้าร้าน
+            if (in_array($user->role, ['manager', 'cashier', 'staff', 'user'])) {
+                return redirect('/admin/memberorder');
+            }
+
+            return redirect('/delivery');
         }
 
 
