@@ -31,7 +31,7 @@ class Delivery extends Controller
             session(['table_id' => $table_id]);
         }
         $promotion = Promotion::where('is_status', 1)->get();
-        $category = Categories::has('menu')->with('files')->get();
+        $category = Categories::with('files')->get();
         return view('delivery.main_page', compact('category', 'promotion'));
     }
 

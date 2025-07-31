@@ -22,7 +22,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use PromptPayQR\Builder;
-use Illuminate\Validation\ValidationException;
 use App\Helpers\RoleHelper;
 use Illuminate\Support\Facades\Hash;
 use function Laravel\Prompts\table;
@@ -477,62 +476,61 @@ class Admin extends Controller
     }
 
     public function usersSave(Request $request)
-{
+    {
         if (!RoleHelper::isOwner()) {
             abort(403, 'เฉพาะเจ้าของเท่านั้น');
         }
+        $input = $request->input();
 
-        $id = $request->get('id');
-
-        // กำหนด rule สำหรับ validate
-        $rules = [
-            'name' => 'required|string|max:255|unique:users,name' . ($id ? ',' . $id : ''),
-            'email' => 'required|email|unique:users,email' . ($id ? ',' . $id : ''),
-            'tel' => 'required|string|max:20|unique:users,tel' . ($id ? ',' . $id : ''),
-            'role' => 'required|in:manager,cashier,staff',
-            'password' => $id ? 'nullable|min:8' : 'required|min:8',
-        ];
-
-        // ข้อความแจ้งเตือนสำหรับ validation
-        $messages = [
-            'name.unique' => 'ชื่อผู้ใช้นี้มีอยู่ในระบบแล้ว',
-            'email.unique' => 'อีเมลนี้มีอยู่ในระบบแล้ว',
-            'tel.unique' => 'เบอร์ติดต่อนี้มีอยู่ในระบบแล้ว',
-            'required' => 'กรุณากรอกข้อมูล :attribute',
-            'password.min' => 'รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร',
-        ];
-
-        try {
-            $request->validate($rules, $messages);
-        } catch (ValidationException $e) {
-            // หาก validation ไม่ผ่าน ให้ส่งข้อความแรกที่ผิดพลาดกลับไป
-            return redirect()->back()->withInput($request->except('password'))->with('error', $e->validator->errors()->first());
-        }
-
-        $data = [
-            'name' => $request->name,
-            'email' => $request->email,
-            'tel' => $request->tel,
-            'role' => $request->role,
-        ];
-
-        if ($request->filled('password')) {
-            $data['password'] = Hash::make($request->password);
-        }
-
-        try {
-            if (empty($id)) {
-                $data['email_verified_at'] = now();
-                User::create($data);
-                $message = 'เพิ่มผู้ใช้เรียบร้อยแล้ว';
-            } else {
-                User::findOrFail($id)->update($data);
-                $message = 'แก้ไขผู้ใช้เรียบร้อยแล้ว';
+        if (!isset($input['id'])) {
+            // check duplicate email
+            if (User::where('email', $input['email'])->exists()) {
+                return redirect()->back()->with('error', 'อีเมลซ้ำ กรุณาใส่ใหม่');
             }
-            return redirect()->route('admin.users')->with('success', $message);
-        } catch (\Exception $e) {
-            return redirect()->back()->withInput($request->except('password'))->with('error', 'เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' . $e->getMessage());
+            // check duplicate name
+            if (User::where('name', $input['name'])->exists()) {
+                return redirect()->back()->with('error', 'ชื่อผู้ใช้ซ้ำ กรุณาใส่ใหม่');
+            }
+            // check duplicate tel
+            if (User::where('tel', $input['tel'])->exists()) {
+                return redirect()->back()->with('error', 'เบอร์ติดต่อซ้ำ กรุณาใส่ใหม่');
+            }
+            $user = new User();
+            $user->name = $input['name'];
+            $user->email = $input['email'];
+            $user->tel = $input['tel'];
+            $user->role = $input['role'];
+            $user->email_verified_at = now();
+            $user->password = Hash::make($input['password']);
+            $user->remember_token = null;
+            if ($user->save()) {
+                return redirect()->route('admin.users')->with('success', 'บันทึกรายการเรียบร้อยแล้ว');
+            }
+        } else {
+            $user = User::find($input['id']);
+             // check duplicates for update except current record
+            if (User::where('email', $input['email'])->where('id', '!=', $input['id'])->exists()) {
+                return redirect()->back()->with('error', 'อีเมลซ้ำ กรุณาใส่ใหม่');
+            }
+            if (User::where('name', $input['name'])->where('id', '!=', $input['id'])->exists()) {
+                return redirect()->back()->with('error', 'ชื่อผู้ใช้ซ้ำ กรุณาใส่ใหม่');
+            }
+            if (User::where('tel', $input['tel'])->where('id', '!=', $input['id'])->exists()) {
+                return redirect()->back()->with('error', 'เบอร์ติดต่อซ้ำ กรุณาใส่ใหม่');
+            }
+            $user->name = $input['name'];
+            $user->email = $input['email'];
+            $user->tel = $input['tel'];
+            $user->role = $input['role'];
+            if (!empty($input['password'])) {
+                $user->password = Hash::make($input['password']);
+            }
+            if ($user->save()) {
+                return redirect()->route('admin.users')->with('success', 'บันทึกรายการเรียบร้อยแล้ว');
+            }
         }
+
+        return redirect()->route('admin.users')->with('error', 'ไม่สามารถบันทึกข้อมูลได้');
     }
 
     public function usersDelete(Request $request)
